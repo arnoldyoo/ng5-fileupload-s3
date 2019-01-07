@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpHeaders, HttpClient, HttpRequest } from '@angular/common/http';
+import { HttpClient, HttpRequest, HttpHeaders } from '@angular/common/http';
 
 export interface PreSignedURL {
     success: boolean;
@@ -20,21 +20,33 @@ export class FileService {
         return this.http.get<PreSignedURL>('http://localhost:3000/get-presigned-url', { headers: getheaders});
     }
 
-    uploadfileAWSS3(fileuploadurl, contenttype, file): Observable<any>{ 
+    uploadfileAWSS3(fileuploadurl, contenttype, data: any): Observable<any>{ 
         const headers = new HttpHeaders({
-            'Content-Type': contenttype,
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'Access-Control-Allow-Methods': 'PUT'
+            'Content-Type': 'multipart/form-data',
         });
         const req = new HttpRequest(
-        'PUT',
-        fileuploadurl,
-        file,
-        {
-        headers: headers,
-        reportProgress: true,
-        });
+            'PUT',
+            fileuploadurl,
+            data,
+            {
+                headers: headers,
+                reportProgress: true,
+            }
+        );
         return this.http.request(req);
+    }
+
+    test(): Observable<any> {
+        let header = new HttpHeaders();
+        header = header.set('Content-Type', 'application/json; charset=utf-8').set('Accept', 'application/json').set('Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFybm9sZHlvb0BpdGFtLmdhbWVzIiwiaWF0IjoxNTQ2NDcxMzM2fQ.cLanAcAc7dPS9_9NTg0Bx2emrvv5nfqEKW_jyh_qW40');
+        
+        const params = {
+            "id": "airnold@naver.com",
+            "password": "1111",
+            "firstName": "Arnold",
+            "lastName": "Yoo"
+        }
+        // return this.http.post('https://gd7uqabuzd.execute-api.ap-northeast-2.amazonaws.com/dev/v1/get-application', { headers: header});
+        return this.http.post('https://gd7uqabuzd.execute-api.ap-northeast-2.amazonaws.com/dev/v1/sign-up', params, { headers: header});   
     }
 }

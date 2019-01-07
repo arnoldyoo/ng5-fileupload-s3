@@ -3,6 +3,8 @@ import { HttpEvent } from '@angular/common/http';
 import { FileService } from './file.service';
 import {FormBuilder, FormGroup, Validators} from "@angular/forms";
 
+declare var $: any;
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -13,7 +15,7 @@ export class AppComponent {
 
   form: FormGroup;
   loading: boolean = false;
-
+  fileform: any
   @ViewChild('fileInput') fileInput: ElementRef;
 
   constructor(
@@ -27,33 +29,40 @@ export class AppComponent {
     this.form = this.fb.group({
       fileimg: null
     });
+    // this.fileService.test().subscribe(res => {
+    //   console.log(res);
+    // })
   }
 
   onFileChange(event) {
     let reader = new FileReader();
     if(event.target.files && event.target.files.length > 0) {
-      let file = event.target.files[0];
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const readerResult: any = reader.result;
-        this.form.get('fileimg').setValue({
-          filename: file.name,
-          filetype: file.type,
-          value: readerResult.split(',')[1]
-        })
-      };
+      this.fileform  = event.target.files[0];
     }
   }
 
   onSubmit() {
     this.fileService.getpresignedurls().subscribe(res =>{
-      console.log(res);
+      
       if(res.success){
+        var fd = new FormData();
+        fd.append( 'file', this.fileform ); 
         const fileuploadurl = res.urls;
-        this.fileService.uploadfileAWSS3(fileuploadurl, 'image/jpg', this.form.get('fileimg').value)
+        this.fileService.uploadfileAWSS3(fileuploadurl, 'multipart/form-data', this.fileform)
         .subscribe((event: HttpEvent<any>) => {
           console.log(event);
         });
+        // $.ajax( {
+        //   url: fileuploadurl,
+        //   type: 'PUT',
+        //   data: this.fileform,
+        //   processData: false,
+        //   contentType: false,
+        //   headers: {'Content-Type': 'multipart/form-data'},
+        //   success: function(){
+        //     console.log( "File was uploaded" );
+        //   }
+        // });
       } else {
         console.log(res.message, res.urls);
       }
